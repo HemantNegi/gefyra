@@ -36,40 +36,11 @@ jobs:
         cp `find build/ -name "gefyra"` ../gefyra
         cp README.md ../README.md
         cat pyproject.toml | grep version -m 1 | awk '{ print "APP_VERSION="substr($3, 2, length($3) -2)}' >> $GITHUB_ENV
-    - name: Codesign executable
-      env:
-        MACOS_DEVELOPER_HASH: ${{ secrets.MACOS_DEVELOPER_HASH }}
-        MACOS_APP_HASH: ${{ secrets.MACOS_APP_HASH }}
-        MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-        MACOS_KEYCHAIN_PASS: ${{ secrets.MACOS_KEYCHAIN_PASS }}
-        MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-      run: |
-        echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
-        security create-keychain -p $MACOS_KEYCHAIN_PASS build.keychain
-        security default-keychain -s build.keychain
-        security unlock-keychain -p $MACOS_KEYCHAIN_PASS build.keychain
-        security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
-        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $MACOS_KEYCHAIN_PASS build.keychain
-        
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-        <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-        <plist version=\"1.0\">
-        <dict>
-              <key>com.apple.security.cs.allow-jit</key>
-              <true/>
-              <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-              <true/>
-              <key>com.apple.security.cs.disable-library-validation</key>
-              <true/>
-        </dict>
-        </plist>" > entitlements.plist
-        
-        echo "Now running codesign"
-        /usr/bin/codesign --deep --force --options=runtime --entitlements ./entitlements.plist --sign $MACOS_APP_HASH --timestamp ./gefyra
+   
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: gefyra-${{ env.APP_VERSION }}-darwin-amd64
+        name: gefyra-xx-darwin-amd64
         path: |
           gefyra
           LICENSE
@@ -77,9 +48,9 @@ jobs:
         retention-days: 5
     - name: Create release zip
       if: ${{ github.event.release && github.event.action == 'published' }}
-      run: zip gefyra-${{ env.APP_VERSION }}-darwin-amd64.zip "gefyra" "LICENSE" "README.md"
+      run: zip gefyra-xx-darwin-amd64.zip "gefyra" "LICENSE" "README.md"
     - name: Attach files to release
       uses: softprops/action-gh-release@v1
       if: ${{ github.event.release && github.event.action == 'published' }}
       with:
-        files: gefyra-${{ env.APP_VERSION }}-darwin-amd64.zip
+        files: gefyra-xx-darwin-amd64.zip
